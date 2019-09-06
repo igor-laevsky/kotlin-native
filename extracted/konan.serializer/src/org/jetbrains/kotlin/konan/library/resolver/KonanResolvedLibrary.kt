@@ -1,11 +1,6 @@
 package org.jetbrains.kotlin.konan.library.resolver
-
+/*
 import org.jetbrains.kotlin.konan.library.KonanLibrary
-
-interface PackageAccessedHandler {
-
-    fun markPackageAccessed(fqName: String)
-}
 
 /**
  * A [KonanLibrary] wrapper that is used for resolving library's dependencies.
@@ -24,3 +19,6 @@ interface KonanResolvedLibrary: PackageAccessedHandler {
     // Is provided by the distribution?
     val isDefault: Boolean
 }
+
+
+ */

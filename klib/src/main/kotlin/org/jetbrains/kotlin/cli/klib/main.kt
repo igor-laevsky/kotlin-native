@@ -20,8 +20,8 @@ import org.jetbrains.kotlin.konan.util.DependencyProcessor
 import org.jetbrains.kotlin.library.unpackZippedKonanLibraryTo
 import org.jetbrains.kotlin.konan.utils.KonanFactories.DefaultDeserializedDescriptorFactory
 import org.jetbrains.kotlin.konan.util.Logger
-import org.jetbrains.kotlin.metadata.konan.KonanProtoBuf
-import org.jetbrains.kotlin.serialization.konan.parseModuleHeader
+import org.jetbrains.kotlin.library.metadata.KlibMetadataProtoBuf
+import org.jetbrains.kotlin.backend.common.serialization.metadata.parseModuleHeader
 import org.jetbrains.kotlin.storage.LockBasedStorageManager
 import java.lang.System.out
 import kotlin.system.exitProcess
@@ -85,7 +85,7 @@ object KlibToolLogger : Logger {
 val defaultRepository = File(DependencyProcessor.localKonanDir.resolve("klib").absolutePath)
 
 open class ModuleDeserializer(val library: ByteArray) {
-    protected val moduleHeader: KonanProtoBuf.LinkDataLibrary
+    protected val moduleHeader: KlibMetadataProtoBuf.LinkDataLibrary
         get() = parseModuleHeader(library)
 
     val moduleName: String

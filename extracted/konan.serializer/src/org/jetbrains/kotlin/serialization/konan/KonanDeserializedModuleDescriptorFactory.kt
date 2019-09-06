@@ -14,7 +14,7 @@ interface KonanDeserializedModuleDescriptorFactory {
     val descriptorFactory: KonanModuleDescriptorFactory
     val packageFragmentsFactory: KonanDeserializedPackageFragmentsFactory
 
-    fun createDescriptor(
+    fun createDescriptor(Klib
             library: KonanLibrary,
             languageVersionSettings: LanguageVersionSettings,
             storageManager: StorageManager,

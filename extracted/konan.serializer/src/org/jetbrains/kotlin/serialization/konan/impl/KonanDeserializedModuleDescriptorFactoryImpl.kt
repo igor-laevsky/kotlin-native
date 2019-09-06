@@ -1,5 +1,8 @@
 package org.jetbrains.kotlin.serialization.konan.impl
 
+import org.jetbrains.kotlin.backend.common.serialization.metadata.KlibMetadataSerializerProtocol
+import org.jetbrains.kotlin.backend.common.serialization.metadata.PackageAccessedHandler
+import org.jetbrains.kotlin.backend.common.serialization.metadata.parseModuleHeader
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.functions.functionInterfacePackageFragmentProvider
 import org.jetbrains.kotlin.config.LanguageVersionSettings
@@ -10,7 +13,7 @@ import org.jetbrains.kotlin.descriptors.PackageFragmentProvider
 import org.jetbrains.kotlin.descriptors.PackageFragmentProviderImpl
 import org.jetbrains.kotlin.descriptors.impl.CompositePackageFragmentProvider
 import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
-import org.jetbrains.kotlin.descriptors.konan.DeserializedKonanModuleOrigin
+import org.jetbrains.kotlin.descriptors.konan.DeserializedKlibModuleOrigin
 import org.jetbrains.kotlin.descriptors.konan.KonanModuleDescriptorFactory
 import org.jetbrains.kotlin.descriptors.konan.isKonanStdlib
 import org.jetbrains.kotlin.incremental.components.LookupTracker
@@ -53,7 +56,7 @@ internal class KonanDeserializedModuleDescriptorFactoryImpl(
         val libraryProto = parseModuleHeader(library.moduleHeaderData)
 
         val moduleName = Name.special(libraryProto.moduleName)
-        val moduleOrigin = DeserializedKonanModuleOrigin(library)
+        val moduleOrigin = DeserializedKlibModuleOrigin(library)
 
         val moduleDescriptor = if (builtIns != null )
             descriptorFactory.createDescriptor(moduleName, storageManager, builtIns, moduleOrigin)
@@ -83,12 +86,12 @@ internal class KonanDeserializedModuleDescriptorFactoryImpl(
     }
 
     private fun createPackageFragmentProvider(
-            library: KonanLibrary,
-            packageAccessedHandler: PackageAccessedHandler?,
-            packageFragmentNames: List<String>,
-            storageManager: StorageManager,
-            moduleDescriptor: ModuleDescriptor,
-            configuration: DeserializationConfiguration
+        library: KonanLibrary,
+        packageAccessedHandler: PackageAccessedHandler?,
+        packageFragmentNames: List<String>,
+        storageManager: StorageManager,
+        moduleDescriptor: ModuleDescriptor,
+        configuration: DeserializationConfiguration
     ): PackageFragmentProvider {
 
         val deserializedPackageFragments = packageFragmentsFactory.createDeserializedPackageFragments(
@@ -104,7 +107,8 @@ internal class KonanDeserializedModuleDescriptorFactoryImpl(
         val annotationAndConstantLoader = AnnotationAndConstantLoaderImpl(
                 moduleDescriptor,
                 notFoundClasses,
-                KonanSerializerProtocol)
+                KlibMetadataSerializerProtocol
+        )
 
         val components = DeserializationComponents(
                 storageManager,
@@ -120,7 +124,7 @@ internal class KonanDeserializedModuleDescriptorFactoryImpl(
                 emptyList(),
                 notFoundClasses,
                 ContractDeserializerImpl(configuration, storageManager),
-                extensionRegistryLite = KonanSerializerProtocol.extensionRegistry)
+                extensionRegistryLite = KlibMetadataSerializerProtocol.extensionRegistry)
 
         for (packageFragment in deserializedPackageFragments) {
             packageFragment.initialize(components)

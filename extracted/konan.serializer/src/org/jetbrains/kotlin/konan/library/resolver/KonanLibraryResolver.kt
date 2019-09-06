@@ -3,7 +3,7 @@ package org.jetbrains.kotlin.konan.library.resolver
 import org.jetbrains.kotlin.konan.library.KonanLibrary
 import org.jetbrains.kotlin.konan.library.SearchPathResolverWithTarget
 import org.jetbrains.kotlin.library.UnresolvedLibrary
-
+/*
 interface KonanLibraryResolver {
 
     val searchPathResolver: SearchPathResolverWithTarget
@@ -54,3 +54,5 @@ val TopologicalLibraryOrder: LibraryOrder = { input ->
 
     sorted
 }
+
+ */

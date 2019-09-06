@@ -1,5 +1,6 @@
 package org.jetbrains.kotlin.serialization.konan.impl
 
+import org.jetbrains.kotlin.backend.common.serialization.metadata.KlibMetadataDeserializedPackageFragmentsFactory
 import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.PackageFragmentDescriptor
@@ -9,39 +10,27 @@ import org.jetbrains.kotlin.konan.library.KonanLibrary
 import org.jetbrains.kotlin.konan.library.exportForwardDeclarations
 import org.jetbrains.kotlin.konan.library.isInterop
 import org.jetbrains.kotlin.konan.library.packageFqName
-import org.jetbrains.kotlin.konan.library.resolver.PackageAccessedHandler
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.scopes.MemberScopeImpl
 import org.jetbrains.kotlin.serialization.konan.KonanDeserializedPackageFragmentsFactory
-import org.jetbrains.kotlin.serialization.konan.KonanPackageFragment
-import org.jetbrains.kotlin.storage.StorageManager
+import org.jetbrains.kotlin.backend.common.serialization.metadata.KlibMetadataPackageFragment
+import org.jetbrains.kotlin.backend.common.serialization.metadata.impl.KlibMetadataDeserializedPackageFragmentsFactoryImpl
+import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.utils.Printer
 import org.jetbrains.kotlin.utils.addToStdlib.firstNotNullResult
 
-// FIXME(ddol): decouple and move interop-specific logic back to Kotlin/Native.
-internal object KonanDeserializedPackageFragmentsFactoryImpl: KonanDeserializedPackageFragmentsFactory {
-
-    override fun createDeserializedPackageFragments(
-            library: KonanLibrary,
-            packageFragmentNames: List<String>,
-            moduleDescriptor: ModuleDescriptor,
-            packageAccessedHandler: PackageAccessedHandler?,
-            storageManager: StorageManager
-    ) = packageFragmentNames.flatMap {
-        val fqName = FqName(it)
-        val parts = library.packageMetadataParts(fqName.asString())
-        parts.map { partName ->
-            KonanPackageFragment(fqName, library, packageAccessedHandler, storageManager, moduleDescriptor, partName)
-        }
-    }
-
+internal object KonanDeserializedPackageFragmentsFactoryImpl:
+    KlibMetadataDeserializedPackageFragmentsFactoryImpl()
+{
     override fun createSyntheticPackageFragments(
-            library: KonanLibrary,
-            deserializedPackageFragments: List<KonanPackageFragment>,
-            moduleDescriptor: ModuleDescriptor
+        library: KotlinLibrary,
+        deserializedPackageFragments: List<KlibMetadataPackageFragment>,
+        moduleDescriptor: ModuleDescriptor
     ): List<PackageFragmentDescriptor> {
+
+        val library = library as KonanLibrary
 
         if (!library.isInterop) return emptyList()
 
@@ -102,9 +91,9 @@ class ExportedForwardDeclarationsPackageFragmentDescriptor(
  * The package fragment that redirects all requests for classifier lookup to its targets.
  */
 class ClassifierAliasingPackageFragmentDescriptor(
-        targets: List<KonanPackageFragment>,
-        module: ModuleDescriptor,
-        fqName: FqName
+    targets: List<KlibMetadataPackageFragment>,
+    module: ModuleDescriptor,
+    fqName: FqName
 ) : PackageFragmentDescriptorImpl(module, fqName) {
 
     private val memberScope = object : MemberScopeImpl() {

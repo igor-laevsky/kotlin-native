@@ -1,9 +1,8 @@
 package org.jetbrains.kotlin.konan.library.resolver.impl
-
+/*
 import org.jetbrains.kotlin.konan.library.KonanLibrary
 import org.jetbrains.kotlin.konan.library.resolver.KonanResolvedLibrary
-import org.jetbrains.kotlin.serialization.konan.SourceFileMap
-import org.jetbrains.kotlin.serialization.konan.parseModuleHeader
+import org.jetbrains.kotlin.backend.common.serialization.metadata.parseModuleHeader
 
 internal class KonanResolvedLibraryImpl(override val library: KonanLibrary): KonanResolvedLibrary {
 
@@ -30,3 +29,5 @@ internal class KonanResolvedLibraryImpl(override val library: KonanLibrary): Kon
 
     override fun toString() = "library=$library, dependsOn=${_resolvedDependencies.joinToString { it.library.toString() }}"
 }
+
+ */

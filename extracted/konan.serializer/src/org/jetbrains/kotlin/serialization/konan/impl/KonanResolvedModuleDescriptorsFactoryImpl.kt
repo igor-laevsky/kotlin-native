@@ -1,12 +1,13 @@
 package org.jetbrains.kotlin.serialization.konan.impl
 
+import org.jetbrains.kotlin.backend.common.serialization.metadata.PackageAccessedHandler
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.impl.ClassDescriptorImpl
 import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
 import org.jetbrains.kotlin.descriptors.impl.PackageFragmentDescriptorImpl
-import org.jetbrains.kotlin.descriptors.konan.KonanModuleOrigin
+import org.jetbrains.kotlin.descriptors.konan.KlibModuleOrigin
 import org.jetbrains.kotlin.descriptors.konan.SyntheticModulesOrigin
 import org.jetbrains.kotlin.incremental.components.LookupLocation
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
@@ -101,7 +102,7 @@ class KonanResolvedModuleDescriptorsFactoryImpl(
             name: Name,
             storageManager: StorageManager,
             builtIns: KotlinBuiltIns?,
-            moduleOrigin: KonanModuleOrigin
+            moduleOrigin: KlibModuleOrigin
     ) = if (builtIns != null)
         moduleDescriptorFactory.descriptorFactory.createDescriptor(name, storageManager, builtIns, moduleOrigin)
     else

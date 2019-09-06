@@ -15,7 +15,7 @@
  */
 
 package org.jetbrains.kotlin.konan.library.resolver.impl
-
+/*
 import org.jetbrains.kotlin.konan.file.File
 import org.jetbrains.kotlin.konan.library.*
 import org.jetbrains.kotlin.konan.library.resolver.*
@@ -149,3 +149,4 @@ internal class KonanLibraryResolverResultImpl(
 
     override fun toString() = "roots=$roots, all=$all"
 }
+*/
