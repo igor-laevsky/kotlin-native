@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.backend.konan
 
+import org.jetbrains.kotlin.Kotlin.library.resolver.KotlinLibraryResolveResult
 import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.functions.functionInterfacePackageFragmentProvider
@@ -100,11 +101,11 @@ internal object TopDownAnalyzerFacadeForKonan {
 }
 
 private class ResolvedDependencies(
-        resolvedLibraries: KonanLibraryResolveResult,
-        storageManager: StorageManager,
-        builtIns: KotlinBuiltIns,
-        specifics: LanguageVersionSettings,
-        friendModuleFiles: Set<File>
+    resolvedLibraries: KotlinLibraryResolveResult,
+    storageManager: StorageManager,
+    builtIns: KotlinBuiltIns,
+    specifics: LanguageVersionSettings,
+    friendModuleFiles: Set<File>
 ) {
 
     val moduleDescriptors: KonanResolvedModuleDescriptors
