@@ -26,7 +26,6 @@ import org.jetbrains.kotlin.konan.util.Logger
 import kotlin.system.exitProcess
 import org.jetbrains.kotlin.library.toUnresolvedLibraries
 import org.jetbrains.kotlin.konan.KonanVersion
-import org.jetbrains.kotlin.konan.library.isInterop
 import org.jetbrains.kotlin.library.UnresolvedLibrary
 
 class KonanConfig(val project: Project, val configuration: CompilerConfiguration) {
@@ -43,6 +42,7 @@ class KonanConfig(val project: Project, val configuration: CompilerConfiguration
 
     val infoArgsOnly = configuration.kotlinSourceRoots.isEmpty()
             && configuration[KonanConfigKeys.INCLUDED_LIBRARIES].isNullOrEmpty()
+            && !produce.isCache
 
     // TODO: debug info generation mode and debug/release variant selection probably requires some refactoring.
     val debug: Boolean get() = configuration.getBoolean(KonanConfigKeys.DEBUG)
@@ -143,6 +143,24 @@ class KonanConfig(val project: Project, val configuration: CompilerConfiguration
 
     internal val includedLibraries by lazy {
         getIncludedLibraries(includedLibraryFiles, configuration, resolvedLibraries)
+    }
+
+    val usedDynamicCaches: List<String>
+        get() = configuration.get(KonanConfigKeys.USED_DYNAMIC_CACHES)!!
+
+    val usedStaticCaches: List<String>
+        get() = configuration.get(KonanConfigKeys.USED_STATIC_CACHES)!!
+
+    // TODO: is "featured libraries" concept applicable here?
+    //   cache may contain more libraries than required,
+    //   and it may be convenient to pass all these libraries as -Xcached-library.
+    val cachedLibraries by lazy {
+        val cachedLibrariesFiles = configuration.get(KonanConfigKeys.CACHED_LIBRARIES)!!.toSet()
+        val usesCache = usedDynamicCaches.isNotEmpty() || usedStaticCaches.isNotEmpty()
+        resolvedLibraries.getFullList().filter {
+            usesCache && it.isDefault // For simplicity; default libraries are anyway included to cache by default.
+                    || it.libraryFile.absolutePath in cachedLibrariesFiles
+        }.toSet()
     }
 
     fun librariesWithDependencies(moduleDescriptor: ModuleDescriptor?): List<KonanLibrary> {

@@ -13,7 +13,9 @@ internal fun determineLinkerOutput(context: Context): LinkerOutputKind =
                 val staticFramework = context.config.produceStaticFramework
                 if (staticFramework) LinkerOutputKind.STATIC_LIBRARY else LinkerOutputKind.DYNAMIC_LIBRARY
             }
+            CompilerOutputKind.DYNAMIC_CACHE,
             CompilerOutputKind.DYNAMIC -> LinkerOutputKind.DYNAMIC_LIBRARY
+            CompilerOutputKind.STATIC_CACHE,
             CompilerOutputKind.STATIC -> LinkerOutputKind.STATIC_LIBRARY
             CompilerOutputKind.PROGRAM -> LinkerOutputKind.EXECUTABLE
             else -> TODO("${context.config.produce} should not reach native linker stage")
@@ -82,9 +84,11 @@ internal class Linker(val context: Context) {
         try {
             File(executable).delete()
             linker.linkCommands(objectFiles = objectFiles, executable = executable,
-                    libraries = linker.linkStaticLibraries(includedBinaries) + context.config.defaultSystemLibraries,
+                    libraries = linker.linkStaticLibraries(includedBinaries) + context.config.defaultSystemLibraries +
+                            context.config.usedStaticCaches,
                     linkerArgs = asLinkerArgs(config.getNotNull(KonanConfigKeys.LINKER_ARGS)) +
                             BitcodeEmbedding.getLinkerOptions(context.config) +
+                            context.config.usedDynamicCaches +
                             libraryProvidedLinkerFlags + frameworkLinkerArgs,
                     optimize = optimize, debug = debug, kind = linkerOutput,
                     outputDsymBundle = context.config.outputFile + ".dSYM").forEach {

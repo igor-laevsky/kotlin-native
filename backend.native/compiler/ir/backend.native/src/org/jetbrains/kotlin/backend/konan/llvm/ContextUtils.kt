@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.backend.konan.Context
 import org.jetbrains.kotlin.backend.konan.hash.GlobalHash
 import org.jetbrains.kotlin.backend.konan.ir.isReal
 import org.jetbrains.kotlin.backend.konan.ir.llvmSymbolOrigin
+import org.jetbrains.kotlin.backend.konan.isCache
 import org.jetbrains.kotlin.descriptors.konan.CompiledKonanModuleOrigin
 import org.jetbrains.kotlin.descriptors.konan.CurrentKonanModuleOrigin
 import org.jetbrains.kotlin.descriptors.konan.DeserializedKonanModuleOrigin
@@ -398,9 +399,21 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
     val bitcodeToLink: List<KonanLibrary> by lazy {
         context.config.resolvedLibraries
                 .getFullList(TopologicalLibraryOrder)
-                .filter { (!it.isDefault && !context.config.purgeUserLibs) || imports.bitcodeIsUsed(it) }
-                // TODO: the filter above is incorrect when compiling to multiple LLVM modules.
-                .filter { context.llvmModuleSpecification.containsLibrary(it) }
+                .filter { shouldContainBitcode(it) }
+    }
+
+    private fun shouldContainBitcode(library: KonanLibrary): Boolean {
+        if (!context.llvmModuleSpecification.containsLibrary(library)) {
+            require(library in context.config.cachedLibraries)
+            // So the library was handled as cache; see below.
+            return false
+        }
+
+        if (context.config.produce.isCache) {
+            return true
+        }
+
+        return (!library.isDefault && !context.config.purgeUserLibs) || imports.bitcodeIsUsed(library)
     }
 
     val additionalProducedBitcodeFiles = mutableListOf<String>()

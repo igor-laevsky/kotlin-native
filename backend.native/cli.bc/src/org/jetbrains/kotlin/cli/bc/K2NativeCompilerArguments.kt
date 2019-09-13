@@ -130,6 +130,30 @@ class K2NativeCompilerArguments : CommonCompilerArguments() {
     var exportedLibraries: Array<String>? = null
 
     @Argument(
+            value = "-Xcached-library",
+            valueDescription = "<path>",
+            description = "Path to the library compiled to cache",
+            delimiter = ""
+    )
+    var cachedLibraries: Array<String>? = null
+
+    @Argument(
+            value = "-Xuse-dynamic-cache",
+            valueDescription = "<path>",
+            description = "Path to dynamic cache binary to link with",
+            delimiter = ""
+    )
+    var usedDynamicCaches: Array<String>? = null
+
+    @Argument(
+            value = "-Xuse-static-cache",
+            valueDescription = "<path>",
+            description = "Path to static cache binary to include",
+            delimiter = ""
+    )
+    var usedStaticCaches: Array<String>? = null
+
+    @Argument(
             value = "-Xframework-import-header",
             valueDescription = "<header>",
             description = "Add additional header import to framework header"

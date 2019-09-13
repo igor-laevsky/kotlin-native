@@ -145,13 +145,23 @@ internal val psiToIrPhase = konanUnitPhase(
 
             val forwardDeclarationsModuleDescriptor = moduleDescriptor.allDependencyModules.firstOrNull { it.isForwardDeclarationModule }
 
+            val modulesToCache = if (config.produce.isCache) {
+                moduleDescriptor.allDependencyModules.filter {
+                    it.konanLibrary !in config.cachedLibraries
+                }
+            } else {
+                emptyList()
+            }
+
+            val exportedDependencies = (getExportedDependencies() + modulesToCache).distinct()
+
             val deserializer = KonanIrLinker(
                     moduleDescriptor,
                     this as LoggingContext,
                     generatorContext.irBuiltIns,
                     symbolTable,
                     forwardDeclarationsModuleDescriptor,
-                    getExportedDependencies()
+                    exportedDependencies
             )
 
             var dependenciesCount = 0
@@ -180,12 +190,16 @@ internal val psiToIrPhase = konanUnitPhase(
             val module = translator.generateModuleFragment(generatorContext, environment.getSourceFiles(),
                     deserializer, listOf(functionIrClassFactory))
 
+            if (this.stdlibModule in modulesToCache) {
+                functionIrClassFactory.buildAllClasses()
+            }
+
             irModule = module
-            irModules = deserializer.modules
+            irModules = deserializer.modules.filterValues { it.descriptor.konanLibrary !in config.cachedLibraries }
             ir.symbols = symbols
 
             functionIrClassFactory.module =
-                    (listOf(irModule!!) + irModules.values)
+                    (listOf(irModule!!) + deserializer.modules.values)
                             .single { it.descriptor.isKonanStdlib() }
         },
         name = "Psi2Ir",

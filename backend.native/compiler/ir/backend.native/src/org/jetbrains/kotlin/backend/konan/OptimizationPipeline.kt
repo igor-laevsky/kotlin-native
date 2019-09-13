@@ -111,6 +111,8 @@ private class LlvmPipelineConfiguration(context: Context) {
 // Since we are in a "closed world" internalization and global dce
 // can be safely used to reduce size of a bitcode.
 internal fun runClosedWorldCleanup(context: Context) {
+    if (context.config.produce.isCache) return // Disable internalization and global DCE .
+
     initializeLlvmGlobalPassRegistry()
     val llvmModule = context.llvmModule!!
     val modulePasses = LLVMCreatePassManager()
@@ -149,10 +151,12 @@ internal fun runLlvmOptimizationPipeline(context: Context) {
         LLVMKotlinAddTargetLibraryInfoWrapperPass(modulePasses, config.targetTriple)
         // TargetTransformInfo pass.
         LLVMAddAnalysisPasses(targetMachine, modulePasses)
-        // Since we are in a "closed world" internalization and global dce
-        // can be safely used to reduce size of a bitcode.
-        LLVMAddInternalizePass(modulePasses, 0)
-        LLVMAddGlobalDCEPass(modulePasses)
+        if (!context.config.produce.isCache) {
+            // Since we are in a "closed world" internalization and global dce
+            // can be safely used to reduce size of a bitcode.
+            LLVMAddInternalizePass(modulePasses, 0)
+            LLVMAddGlobalDCEPass(modulePasses)
+        }
 
         config.customInlineThreshold?.let { threshold ->
             LLVMPassManagerBuilderUseInlinerWithThreshold(passBuilder, threshold)

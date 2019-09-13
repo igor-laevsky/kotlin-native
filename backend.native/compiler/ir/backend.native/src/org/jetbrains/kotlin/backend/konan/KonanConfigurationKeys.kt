@@ -32,6 +32,12 @@ class KonanConfigKeys {
                 = CompilerConfigurationKey.create("fully qualified main() name")
         val EXPORTED_LIBRARIES: CompilerConfigurationKey<List<String>>
                 = CompilerConfigurationKey.create<List<String>>("libraries included into produced framework API")
+        val CACHED_LIBRARIES: CompilerConfigurationKey<List<String>>
+                = CompilerConfigurationKey.create<List<String>>("paths to libraries that were precompiled to cache")
+        val USED_DYNAMIC_CACHES: CompilerConfigurationKey<List<String>>
+                = CompilerConfigurationKey.create<List<String>>("paths to dynamic cache binaries to link with")
+        val USED_STATIC_CACHES: CompilerConfigurationKey<List<String>>
+                = CompilerConfigurationKey.create<List<String>>("paths to static cache binaries to include")
         val FRAMEWORK_IMPORT_HEADERS: CompilerConfigurationKey<List<String>>
                 = CompilerConfigurationKey.create<List<String>>("headers imported to framework header")
         val FRIEND_MODULES: CompilerConfigurationKey<List<String>>

@@ -59,7 +59,7 @@ class K2Native : CLICompiler<K2NativeCompilerArguments>() {
         configuration.put(CLIConfigurationKeys.PHASE_CONFIG, createPhaseConfig(toplevelPhase, arguments, messageCollector))
         val konanConfig = KonanConfig(project, configuration)
 
-        val enoughArguments = arguments.freeArgs.isNotEmpty() || arguments.isUsefulWithoutFreeArgs
+        val enoughArguments = arguments.freeArgs.isNotEmpty() || isUsefulWithoutFreeArgs(arguments, configuration)
         if (!enoughArguments) {
             configuration.report(ERROR, "You have not specified any compilation arguments. No output has been produced.")
         }
@@ -89,8 +89,10 @@ class K2Native : CLICompiler<K2NativeCompilerArguments>() {
         return ExitCode.OK
     }
 
-    val K2NativeCompilerArguments.isUsefulWithoutFreeArgs: Boolean
-        get() = listTargets || listPhases || checkDependencies || !includes.isNullOrEmpty()
+    fun isUsefulWithoutFreeArgs(arguments: K2NativeCompilerArguments, configuration: CompilerConfiguration): Boolean =
+            arguments.listTargets || arguments.listPhases || arguments.checkDependencies ||
+                    !arguments.includes.isNullOrEmpty() ||
+                    configuration.get(KonanConfigKeys.PRODUCE)!!.isCache
 
     fun Array<String>?.toNonNullList(): List<String> {
         return this?.asList<String>() ?: listOf<String>()
@@ -211,6 +213,10 @@ class K2Native : CLICompiler<K2NativeCompilerArguments>() {
                 put(LIBRARIES_TO_COVER, arguments.coveredLibraries.toNonNullList())
                 arguments.coverageFile?.let { put(PROFRAW_PATH, it) }
                 put(OBJC_GENERICS, arguments.objcGenerics)
+
+                put(USED_DYNAMIC_CACHES, arguments.usedDynamicCaches.toNonNullList())
+                put(USED_STATIC_CACHES, arguments.usedStaticCaches.toNonNullList())
+                put(CACHED_LIBRARIES, arguments.cachedLibraries.toNonNullList())
             }
         }
     }
