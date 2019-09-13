@@ -4,7 +4,7 @@
  */
 
 package org.jetbrains.kotlin.backend.konan.serialization
-
+/*
 import org.jetbrains.kotlin.backend.konan.Context
 import org.jetbrains.kotlin.backend.konan.descriptors.isExpectMember
 import org.jetbrains.kotlin.backend.konan.descriptors.isSerializableExpectClass
@@ -238,3 +238,5 @@ internal class KonanSerializationUtil(val context: Context, val metadataVersion:
 
 private const val TOP_LEVEL_DECLARATION_COUNT_PER_FILE = 128
 private const val TOP_LEVEL_CLASS_DECLARATION_COUNT_PER_FILE = 64
+
+ */
