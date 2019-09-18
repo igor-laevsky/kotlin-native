@@ -346,7 +346,8 @@ internal val entryPointPhase = SameTypeNamedPhaseWrapper(
             override fun invoke(phaseConfig: PhaseConfig, phaserState: PhaserState<IrModuleFragment>,
                                 context: Context, input: IrModuleFragment): IrModuleFragment {
                 assert(context.config.produce == CompilerOutputKind.PROGRAM)
-                context.ir.symbols.entryPoint!!.owner.file.addChild(makeEntryPoint(context))
+                val file = context.irModule!!.files.last() // Select a file scheduled for compilation.
+                file.addChild(makeEntryPoint(context))
                 return input
             }
         }
