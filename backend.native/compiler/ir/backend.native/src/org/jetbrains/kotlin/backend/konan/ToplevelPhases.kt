@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.ir.util.addChild
+import org.jetbrains.kotlin.ir.util.addFile
 import org.jetbrains.kotlin.ir.util.file
 import org.jetbrains.kotlin.konan.target.CompilerOutputKind
 import org.jetbrains.kotlin.library.KotlinLibrary
@@ -360,7 +361,18 @@ internal val entryPointPhase = SameTypeNamedPhaseWrapper(
             override fun invoke(phaseConfig: PhaseConfig, phaserState: PhaserState<IrModuleFragment>,
                                 context: Context, input: IrModuleFragment): IrModuleFragment {
                 assert(context.config.produce == CompilerOutputKind.PROGRAM)
-                val file = context.irModule!!.files.last() // Select a file scheduled for compilation.
+
+                val originalFile = context.ir.symbols.entryPoint!!.owner.file
+                val originalModule = originalFile.packageFragmentDescriptor.containingDeclaration
+                val file = if (context.llvmModuleSpecification.containsModule(originalModule)) {
+                    originalFile
+                } else {
+                    context.irModule!!.addFile(originalFile.fileEntry, originalFile.fqName)
+                }
+
+                require(context.llvmModuleSpecification.containsModule(
+                        file.packageFragmentDescriptor.containingDeclaration))
+
                 file.addChild(makeEntryPoint(context))
                 return input
             }
