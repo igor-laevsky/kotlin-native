@@ -20,15 +20,14 @@ import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
 import org.jetbrains.kotlin.descriptors.konan.CurrentKlibModuleOrigin
 import org.jetbrains.kotlin.descriptors.konan.isKonanStdlib
 import org.jetbrains.kotlin.konan.file.File
-import org.jetbrains.kotlin.konan.library.KonanLibrary
-import org.jetbrains.kotlin.konan.library.resolver.KonanLibraryResolveResult
 import org.jetbrains.kotlin.konan.utils.KonanFactories
-import org.jetbrains.kotlin.konan.utils.KonanFactories.DefaultDescriptorFactory
+import org.jetbrains.kotlin.library.KotlinLibrary
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
-import org.jetbrains.kotlin.serialization.konan.KonanResolvedModuleDescriptors
+import org.jetbrains.kotlin.serialization.konan.KotlinResolvedModuleDescriptors
 import org.jetbrains.kotlin.storage.StorageManager
 
 internal object TopDownAnalyzerFacadeForKonan {
@@ -39,7 +38,7 @@ internal object TopDownAnalyzerFacadeForKonan {
 
         val projectContext = ProjectContext(config.project, "TopDownAnalyzer for Konan")
 
-        val module = DefaultDescriptorFactory.createDescriptorAndNewBuiltIns(
+        val module = KonanFactories.DefaultDescriptorFactory.createDescriptorAndNewBuiltIns(
                 moduleName, projectContext.storageManager, origin = CurrentKlibModuleOrigin)
         val moduleContext = MutableModuleContextImpl(module, projectContext)
 
@@ -52,9 +51,12 @@ internal object TopDownAnalyzerFacadeForKonan {
 
         val additionalPackages = mutableListOf<PackageFragmentProvider>()
         if (!module.isKonanStdlib()) {
+            println("!isKonanStdlib: $module")
             val dependencies = listOf(module) + resolvedDependencies.moduleDescriptors.resolvedDescriptors + resolvedDependencies.moduleDescriptors.forwardDeclarationsModule
             module.setDependencies(dependencies, resolvedDependencies.friends)
         } else {
+            println("isKonanStdlib: $module")
+
             assert (resolvedDependencies.moduleDescriptors.resolvedDescriptors.isEmpty())
             moduleContext.setDependencies(module)
             // [K][Suspend]FunctionN belong to stdlib.
@@ -88,6 +90,16 @@ internal object TopDownAnalyzerFacadeForKonan {
             postprocessComponents(context, files)
         }.get<LazyTopDownAnalyzer>()
 
+
+        moduleContext.module.allDependencyModules.forEach {
+            println(it)
+            if (it is ModuleDescriptorImpl) {
+                it.packageFragmentProvider.getSubPackagesOf(FqName.ROOT, { true }).forEach {
+                    println(it)
+                }
+            }
+        }
+
         analyzerForKonan.analyzeDeclarations(TopDownAnalysisMode.TopLevelDeclarations, files)
         return AnalysisResult.success(trace.bindingContext, moduleContext.module)
     }
@@ -108,14 +120,14 @@ private class ResolvedDependencies(
     friendModuleFiles: Set<File>
 ) {
 
-    val moduleDescriptors: KonanResolvedModuleDescriptors
+    val moduleDescriptors: KotlinResolvedModuleDescriptors
     val friends: Set<ModuleDescriptorImpl>
 
     init {
 
         val collectedFriends = mutableListOf<ModuleDescriptorImpl>()
 
-        val customAction: (KonanLibrary, ModuleDescriptorImpl) -> Unit = { library, moduleDescriptor ->
+        val customAction: (KotlinLibrary, ModuleDescriptorImpl) -> Unit = { library, moduleDescriptor ->
             if (friendModuleFiles.contains(library.libraryFile)) {
                 collectedFriends.add(moduleDescriptor)
             }

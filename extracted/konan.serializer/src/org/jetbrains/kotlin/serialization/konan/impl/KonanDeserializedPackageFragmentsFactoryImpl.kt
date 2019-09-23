@@ -1,5 +1,5 @@
 package org.jetbrains.kotlin.serialization.konan.impl
-
+/*
 import org.jetbrains.kotlin.backend.common.serialization.metadata.KlibMetadataDeserializedPackageFragmentsFactory
 import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
@@ -120,3 +120,4 @@ class ClassifierAliasingPackageFragmentDescriptor(
 
     override fun getMemberScope(): MemberScope = memberScope
 }
+*/

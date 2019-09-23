@@ -1,7 +1,6 @@
 package org.jetbrains.kotlin.serialization.konan.impl
-
+/*
 import org.jetbrains.kotlin.backend.common.serialization.metadata.KlibMetadataSerializerProtocol
-import org.jetbrains.kotlin.backend.common.serialization.metadata.PackageAccessedHandler
 import org.jetbrains.kotlin.backend.common.serialization.metadata.parseModuleHeader
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.functions.functionInterfacePackageFragmentProvider
@@ -133,3 +132,4 @@ internal class KonanDeserializedModuleDescriptorFactoryImpl(
         return provider
     }
 }
+*/

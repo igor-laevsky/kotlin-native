@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.cli.utilities
 import org.jetbrains.kotlin.konan.file.File
 import org.jetbrains.kotlin.konan.target.PlatformManager
 import org.jetbrains.kotlin.konan.library.*
+import org.jetbrains.kotlin.konan.library.resolver.impl.libraryResolver
 import org.jetbrains.kotlin.konan.target.Distribution
 import org.jetbrains.kotlin.native.interop.gen.jvm.interop
 import org.jetbrains.kotlin.library.toUnresolvedLibraries
@@ -52,7 +53,7 @@ fun invokeInterop(flavor: String, args: Array<String>): Array<String> {
         val allLibraries = resolver.resolveWithDependencies(
                 libraries.toUnresolvedLibraries, noStdLib = true, noDefaultLibs = noDefaultLibs,
                 noEndorsedLibs = noEndorsedLibs
-        ).getFullList()
+        ).getFullList() as List<KonanLibrary>
 
         val imports = allLibraries.map { library ->
             // TODO: handle missing properties?

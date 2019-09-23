@@ -1,5 +1,5 @@
 package org.jetbrains.kotlin.serialization.konan
-
+/*
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
@@ -14,7 +14,7 @@ interface KonanDeserializedModuleDescriptorFactory {
     val descriptorFactory: KonanModuleDescriptorFactory
     val packageFragmentsFactory: KonanDeserializedPackageFragmentsFactory
 
-    fun createDescriptor(Klib
+    fun createDescriptor(
             library: KonanLibrary,
             languageVersionSettings: LanguageVersionSettings,
             storageManager: StorageManager,
@@ -33,3 +33,4 @@ interface KonanDeserializedModuleDescriptorFactory {
             packageAccessedHandler: PackageAccessedHandler? = null
     ): ModuleDescriptorImpl
 }
+*/

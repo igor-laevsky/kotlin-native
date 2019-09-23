@@ -229,7 +229,7 @@ internal val serializerPhase = konanUnitPhase(
             val serializer = KlibMetadataMonolithicSerializer(
                 this.config.configuration.languageVersionSettings,
                 config.configuration.get(CommonConfigurationKeys.METADATA_VERSION
-            )!!, descriptorTable)
+            )!!, descriptorTable, bindingContext)
             serializedMetadata = serializer.serializeModule(moduleDescriptor)
         },
         name = "Serializer",

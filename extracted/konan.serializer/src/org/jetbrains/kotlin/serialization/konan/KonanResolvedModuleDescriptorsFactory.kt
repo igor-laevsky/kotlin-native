@@ -1,5 +1,5 @@
 package org.jetbrains.kotlin.serialization.konan
-
+/*
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
@@ -47,3 +47,4 @@ class KonanResolvedModuleDescriptors(
          */
         val forwardDeclarationsModule: ModuleDescriptorImpl
 )
+*/

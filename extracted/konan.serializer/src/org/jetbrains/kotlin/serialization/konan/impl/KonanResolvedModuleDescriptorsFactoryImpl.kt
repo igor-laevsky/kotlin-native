@@ -1,5 +1,5 @@
 package org.jetbrains.kotlin.serialization.konan.impl
-
+/*
 import org.jetbrains.kotlin.backend.common.serialization.metadata.PackageAccessedHandler
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.config.LanguageVersionSettings
@@ -180,3 +180,4 @@ internal object ForwardDeclarationsFqNames {
     val objCNamesClasses = objCNames.child(Name.identifier("classes"))
     val objCNamesProtocols = objCNames.child(Name.identifier("protocols"))
 }
+*/
