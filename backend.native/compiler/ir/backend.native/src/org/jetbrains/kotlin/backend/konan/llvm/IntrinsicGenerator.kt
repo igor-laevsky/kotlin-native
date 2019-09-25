@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.ir.util.findAnnotation
 import org.jetbrains.kotlin.ir.util.isSuspend
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 
 internal enum class IntrinsicType {
     PLUS,
@@ -60,6 +61,8 @@ internal enum class IntrinsicType {
     GET_CLASS_TYPE_INFO,
     CREATE_UNINITIALIZED_INSTANCE,
     LIST_OF_INTERNAL,
+    SET_OF,
+    MAP_OF,
     IDENTITY,
     IMMUTABLE_BLOB,
     INIT_INSTANCE,
@@ -110,6 +113,18 @@ internal interface IntrinsicGeneratorEnvironment {
 
     fun evaluateExpression(value: IrExpression): LLVMValueRef
 }
+
+// Returns intrinsic type based on the name of the function or null if not
+// recognized. Compared to the 'getTypedIntrinsic' this doesn't force it's users
+// to use IntrinsicGenerator allowing to generate normal kotlin call if needed.
+// TODO: Merge this function with the getIntrinsicType.
+// TODO: Match by full signature.
+internal fun tryGetIntrinsicTypeByName(callSite: IrFunctionAccessExpression) =
+    when (callSite.descriptor.original.fqNameSafe.asString()) {
+        "kotlin.collections.setOf" -> IntrinsicType.SET_OF
+        "kotlin.collections.mapOf" -> IntrinsicType.MAP_OF
+        else -> null
+    }
 
 internal fun tryGetIntrinsicType(callSite: IrFunctionAccessExpression): IntrinsicType? =
         if (callSite.symbol.owner.isTypedIntrinsic) getIntrinsicType(callSite) else null
@@ -259,6 +274,8 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
                 IntrinsicType.OBJC_GET_SELECTOR,
                 IntrinsicType.IMMUTABLE_BLOB ->
                     reportSpecialIntrinsic(intrinsicType)
+                else ->
+                    reportNonLoweredIntrinsic(intrinsicType)
             }
 
     private fun reportSpecialIntrinsic(intrinsicType: IntrinsicType): Nothing =
