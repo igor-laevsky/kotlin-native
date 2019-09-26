@@ -106,7 +106,7 @@ internal class KonanSymbols(
         }
     }.toMap()
 
-    val arrayList = symbolTable.referenceClass(getArrayListClassDescriptor(context))
+    val arrayList = symbolTable.referenceClass(getClassDescriptor("kotlin", "collections", "ArrayList"))
 
     val symbolName = topLevelClass(RuntimeNames.symbolNameAnnotation)
     val filterExceptions = topLevelClass(RuntimeNames.filterExceptions)
@@ -505,10 +505,10 @@ internal class KonanSymbols(
     fun getTestFunctionKind(kind: TestProcessor.FunctionKind) = testFunctionKindCache[kind]!!
 }
 
-private fun getArrayListClassDescriptor(context: Context): ClassDescriptor {
+private fun KonanSymbols.getClassDescriptor(vararg elements: String): ClassDescriptor {
     val module = context.builtIns.builtInsModule
-    val pkg = module.getPackage(FqName.fromSegments(listOf("kotlin", "collections")))
-    val classifier = pkg.memberScope.getContributedClassifier(Name.identifier("ArrayList"),
+    val pkg = module.getPackage(FqName.fromSegments(elements.dropLast(1)))
+    val classifier = pkg.memberScope.getContributedClassifier(Name.identifier(elements.last()),
             NoLookupLocation.FROM_BACKEND)
 
     return classifier as ClassDescriptor
