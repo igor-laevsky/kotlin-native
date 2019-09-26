@@ -9,6 +9,8 @@ import org.jetbrains.kotlin.backend.common.FileLoweringPass
 import org.jetbrains.kotlin.backend.common.lower.IrBuildingTransformer
 import org.jetbrains.kotlin.backend.common.lower.at
 import org.jetbrains.kotlin.backend.konan.Context
+import org.jetbrains.kotlin.backend.konan.llvm.IntrinsicType
+import org.jetbrains.kotlin.backend.konan.llvm.tryGetIntrinsicTypeByName
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.expressions.*
@@ -16,6 +18,7 @@ import org.jetbrains.kotlin.ir.types.isString
 import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import java.util.*
 
 // Maximum  number of elements allowed in the statically instantiable map.
 private const val SMALL_MAP_THRESHOLD = 30
@@ -32,11 +35,16 @@ internal data class StaticConst(val backing: IrConst<*>): StaticExpr() {
     init {
         assert(backing.kind == IrConstKind.String)
     }
+
+    // This should return something which implements equals exactly the same as
+    // the native runtime does.
+    fun runtimeEqualityKey() = backing.kind to backing.value
 }
 
 internal data class StaticSet(val keys: List<StaticConst>): StaticExpr() {
     init {
         assert(keys.size <= SMALL_SET_THRESHOLD)
+        assert(keys.distinctBy { it.runtimeEqualityKey() } == keys) { "keys should be unique" }
     }
 }
 
@@ -45,6 +53,7 @@ internal data class StaticMap(
         val values: List<StaticConst>): StaticExpr() {
     init {
         assert(keys.size == values.size)
+        assert(keys.distinctBy { it.runtimeEqualityKey() } == keys) { "keys should be unique" }
         assert(keys.size <= SMALL_MAP_THRESHOLD)
     }
 }
@@ -52,12 +61,43 @@ internal data class StaticMap(
 // Checks if it's possible to statically evaluate expression and returns it.
 // Otherwise returns null.
 internal fun tryCreateStaticExpr(expr: IrExpression): StaticExpr? {
-    return null
+    if (expr !is IrCall)
+        return null
+
+    return when (tryGetIntrinsicTypeByName(expr)) {
+        IntrinsicType.SET_OF -> tryCreateStaticSet(expr)
+        else -> null
+    }
 }
 
 // Simple helper which checks is it's possible to statically evaluate expression.
 internal fun canStaticallyEvaluate(expr: IrExpression) =
     tryCreateStaticExpr(expr) != null
+
+private fun tryCreateStaticSet(expr: IrCall): StaticSet? {
+    assert(tryGetIntrinsicTypeByName(expr) == IntrinsicType.SET_OF)
+
+    // Need to preserve two properties:
+    //   1. Each element should appear in the set only once.
+    //      Note that we need to use equality as it is defined in the native
+    //      runtime, i.e it's incorrect to directly use '.equals()' here.
+    //   2. Elements are iterated in the order of their appearance.
+
+    val elements = (expr.getValueArgument(0) as? IrVararg)?.elements ?:
+        return null
+
+    if (!elements.all { it is IrConst<*> && it.type.isString() })
+        return null
+
+    val setElements = elements.
+            map { StaticConst(it as IrConst<*>) }.
+            distinctBy { it.runtimeEqualityKey() }
+
+    if (setElements.size >= SMALL_SET_THRESHOLD)
+        return null
+
+    return StaticSet(setElements)
+}
 
 internal class CompileTimeEvaluateLowering(val context: Context): FileLoweringPass {
 
