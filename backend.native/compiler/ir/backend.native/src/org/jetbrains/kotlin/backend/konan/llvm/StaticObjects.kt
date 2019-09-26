@@ -80,6 +80,24 @@ internal fun StaticData.createConstKotlinObject(type: IrClass, vararg fields: Co
     return createRef(objHeaderPtr)
 }
 
+internal fun StaticData.createConstKotlinClass(
+        type: IrClass, fieldValues: Map<String, ConstValue>): ConstPointer {
+
+    val classFields = context.getLayoutBuilder(type).fields.
+            map { it.fqNameForIrSerialization.asString() }
+
+    assert(fieldValues.keys.toSet() == classFields.toSet()) {
+        "must specify values for every class field and nothing more" }
+
+    // Sort incoming fields according to the order of fields in the class.
+    val sorted = linkedMapOf<String, ConstValue>()
+    classFields.forEach {
+        sorted.put(it, fieldValues[it]!!)
+    }
+
+    return createConstKotlinObject(type, *sorted.values.toTypedArray())
+}
+
 internal fun StaticData.createInitializer(type: IrClass, vararg fields: ConstValue): ConstValue =
         Struct(objHeader(type.typeInfoPtr), *fields)
 
@@ -99,15 +117,7 @@ internal fun StaticData.createConstArrayList(array: ConstPointer, length: Int): 
         "$arrayListFqName.length" to Int32(length),
         "$arrayListFqName.backing" to NullPointer(kObjHeader))
 
-    // Now sort these values according to the order of fields returned by getFields()
-    // to match the sorting order of the real ArrayList().
-    val sorted = linkedMapOf<String, ConstValue>()
-    context.getLayoutBuilder(arrayListClass).fields.forEach {
-        val fqName = it.fqNameForIrSerialization.asString()
-        sorted.put(fqName, arrayListFields[fqName]!!)
-    }
-
-    return createConstKotlinObject(arrayListClass, *sorted.values.toTypedArray())
+    return createConstKotlinClass(arrayListClass, arrayListFields)
 }
 
 internal fun StaticData.createUniqueInstance(
