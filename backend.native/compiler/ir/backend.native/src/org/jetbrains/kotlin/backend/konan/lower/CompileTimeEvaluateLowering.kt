@@ -17,6 +17,48 @@ import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.ir.visitors.transformChildrenVoid
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 
+// Maximum  number of elements allowed in the statically instantiable map.
+private const val SMALL_MAP_THRESHOLD = 30
+// Maximum  number of elements allowed in the statically instantiable set.
+private const val SMALL_SET_THRESHOLD = 30
+
+// Represents an expression which can be statically instantiated in the
+// the read-only memory. The concept is very similar to the constant expression
+// but offers an extended set of guarantees.
+// TODO: Consider embedding this into IR.
+internal sealed class StaticExpr
+
+internal data class StaticConst(val backing: IrConst<*>): StaticExpr() {
+    init {
+        assert(backing.kind == IrConstKind.String)
+    }
+}
+
+internal data class StaticSet(val keys: List<StaticConst>): StaticExpr() {
+    init {
+        assert(keys.size <= SMALL_SET_THRESHOLD)
+    }
+}
+
+internal data class StaticMap(
+        val keys: List<StaticConst>,
+        val values: List<StaticConst>): StaticExpr() {
+    init {
+        assert(keys.size == values.size)
+        assert(keys.size <= SMALL_MAP_THRESHOLD)
+    }
+}
+
+// Checks if it's possible to statically evaluate expression and returns it.
+// Otherwise returns null.
+internal fun tryCreateStaticExpr(expr: IrExpression): StaticExpr? {
+    return null
+}
+
+// Simple helper which checks is it's possible to statically evaluate expression.
+internal fun canStaticallyEvaluate(expr: IrExpression) =
+    tryCreateStaticExpr(expr) != null
+
 internal class CompileTimeEvaluateLowering(val context: Context): FileLoweringPass {
 
     override fun lower(irFile: IrFile) {

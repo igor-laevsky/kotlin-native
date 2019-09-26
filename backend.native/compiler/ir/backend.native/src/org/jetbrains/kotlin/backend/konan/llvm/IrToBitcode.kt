@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.backend.konan.*
 import org.jetbrains.kotlin.backend.konan.descriptors.*
 import org.jetbrains.kotlin.backend.konan.ir.*
 import org.jetbrains.kotlin.backend.konan.llvm.coverage.LLVMCoverageInstrumentation
+import org.jetbrains.kotlin.backend.konan.lower.tryCreateStaticExpr
 import org.jetbrains.kotlin.backend.konan.optimizations.DataFlowIR
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.builtins.UnsignedType
@@ -779,6 +780,13 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
     private fun evaluateExpression(value: IrExpression): LLVMValueRef {
         updateBuilderDebugLocation(value)
         recordCoverage(value)
+
+        tryCreateStaticExpr(value)?.let {
+            context.log{"staticallyEvaluate(from)       : ${ir2string(value)}"}
+            context.log{"staticallyEvaluate(to)         : $it"}
+            // do nothing for now
+        }
+
         when (value) {
             is IrTypeOperatorCall    -> return evaluateTypeOperator           (value)
             is IrCall                -> return evaluateCall                   (value)

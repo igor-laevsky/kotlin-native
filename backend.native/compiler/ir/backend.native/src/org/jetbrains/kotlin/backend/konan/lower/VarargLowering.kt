@@ -88,6 +88,11 @@ internal class VarargInjectionLowering constructor(val context: KonanBackendCont
             }
 
             override fun visitFunctionAccess(expression: IrFunctionAccessExpression): IrExpression {
+                if (canStaticallyEvaluate(expression)) {
+                    log { "skipped vararg expression because it can be evaluated statically" }
+                    return expression
+                }
+
                 replaceEmptyParameterWithEmptyArray(expression)
                 return expression
             }
