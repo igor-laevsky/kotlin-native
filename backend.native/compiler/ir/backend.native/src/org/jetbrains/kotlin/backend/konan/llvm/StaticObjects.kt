@@ -43,6 +43,16 @@ internal fun StaticData.createKotlinStringLiteral(value: String): ConstPointer {
     return res
 }
 
+internal fun StaticData.createKotlinConstInt(value: Int): ConstPointer {
+    val name = "kint:$value"
+    val init = createInitializer(context.irBuiltIns.intClass.owner, Int32(value))
+    val global = placeGlobal(name, init)
+    global.setConstant(true)
+
+    val objHeaderPtr = global.pointer.getElementPtr(0)
+    return createRef(objHeaderPtr)
+}
+
 private fun StaticData.createRef(objHeaderPtr: ConstPointer) = objHeaderPtr.bitcast(kObjHeaderPtr)
 
 internal fun StaticData.createConstKotlinArray(arrayClass: IrClass, elements: List<LLVMValueRef>) =

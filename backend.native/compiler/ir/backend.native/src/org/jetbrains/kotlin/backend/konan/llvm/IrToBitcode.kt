@@ -840,13 +840,21 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
 
     //-------------------------------------------------------------------------//
 
+    private fun evaluateStaticConst(expr: StaticConst): LLVMValueRef =
+        when (expr.backing.kind) {
+            is IrConstKind.String ->
+                context.llvm.staticData.kotlinStringLiteral(expr.backing.value as String).llvm
+            is IrConstKind.Int ->
+                context.llvm.staticData.kotlinConstInt(expr.backing.value as Int).llvm
+            else ->
+                TODO("unimplemented")
+        }
+
     // Emits static object as an llvm ir global constant.
     private fun evaluateStaticExpr(expr: StaticExpr): LLVMValueRef =
         when (expr) {
-            is StaticConst -> {
-                assert(expr.backing.kind == IrConstKind.String) { "unimplemented" }
-                context.llvm.staticData.kotlinStringLiteral(expr.backing.value as String).llvm
-            }
+            is StaticConst ->
+                evaluateStaticConst(expr)
             is StaticSet -> {
                 val elements = expr.keys.
                         map { constValue(evaluateStaticExpr(it)) }

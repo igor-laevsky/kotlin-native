@@ -34,7 +34,7 @@ internal sealed class StaticExpr
 
 internal data class StaticConst(val backing: IrConst<*>): StaticExpr() {
     init {
-        assert(backing.kind == IrConstKind.String)
+        assert(backing.kind in listOf(IrConstKind.String, IrConstKind.Int))
     }
 
     // This should return something which implements equals exactly the same as
@@ -79,7 +79,8 @@ internal fun canStaticallyEvaluate(expr: IrExpression) =
 private fun tryCreateStaticConst(expr: IrElement?): StaticConst? {
     if (expr == null)
         return null
-    if (expr is IrConst<*> &&  expr.kind == IrConstKind.String)
+    if (expr is IrConst<*> &&
+            expr.kind in listOf(IrConstKind.String, IrConstKind.Int))
         return StaticConst(expr)
     return null
 }

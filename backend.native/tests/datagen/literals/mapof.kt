@@ -56,9 +56,25 @@ fun runTest() {
     assertEquals(mapOf("b" to "c", "a" to "b").toString(), "{b=c, a=b}")
     assertEquals(mapOf("b" to "c", "a" to "b", "b" to "e").toString(), "{a=b, b=e}")
 
+    // couple of simple checks for the integer constants
+    val mi = get_static_int_map()
+    assertTrue(mi === get_static_int_map())
+    assertTrue(mi !== mapOf(1 to "c"))
+
+    assertEquals(mi, hashMapOf(1 to "b", 2 to "f", 3 to "d"))
+    assertNotEquals(mi, hashMapOf(1 to "b", 2 to "f", 3 to "e"))
+    assertEquals(mi.toString(), "{1=b, 3=d, 2=f}")
+    assertEquals(mapOf(1 to 2, 2 to 3).toString(), "{1=2, 2=3}")
+    assertEquals(mapOf(2 to 3, 1 to 2).toString(), "{2=3, 1=2}")
+    assertEquals(mapOf(2 to 3, 1 to 2, 2 to 1).toString(), "{1=2, 2=1}")
+
     println("OK")
 }
 
 fun get_static_map(): Map<String, String> {
     return mapOf("a" to "b", "c" to "d", "e" to "f")
+}
+
+fun get_static_int_map(): Map<Int, String> {
+    return mapOf(1 to "b", 3 to "d", 2 to "f")
 }

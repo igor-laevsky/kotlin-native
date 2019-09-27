@@ -38,8 +38,20 @@ fun runTest() {
     println(cs.contains("5"))
     println(cs.contains("1"))
     println(!cs.contains("10"))
+
+    // couple of simple checks for the integer constants
+    val si = get_static_int_set()
+    println(si === get_static_int_set())
+    println(si !== setOf(1, 2, 3))
+    println(si != HashSet(listOf(1, 2, 3)))
+    println(si == HashSet(listOf(1, 2, 3, 4)))
+    println(setOf(1, 2, 3, 4, 3, 3, 2) == HashSet(listOf(1, 2, 3, 4)))
 }
 
 fun get_static_set(): Set<String> {
     return setOf("a", "b", "c")
+}
+
+fun get_static_int_set(): Set<Int> {
+    return setOf(1, 2, 3, 4)
 }
