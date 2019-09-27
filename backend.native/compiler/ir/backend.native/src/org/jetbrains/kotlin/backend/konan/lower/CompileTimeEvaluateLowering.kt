@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.backend.common.lower.at
 import org.jetbrains.kotlin.backend.konan.Context
 import org.jetbrains.kotlin.backend.konan.llvm.IntrinsicType
 import org.jetbrains.kotlin.backend.konan.llvm.tryGetIntrinsicTypeByName
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.expressions.*
@@ -75,6 +76,14 @@ internal fun tryCreateStaticExpr(expr: IrExpression): StaticExpr? {
 internal fun canStaticallyEvaluate(expr: IrExpression) =
     tryCreateStaticExpr(expr) != null
 
+private fun tryCreateStaticConst(expr: IrElement?): StaticConst? {
+    if (expr == null)
+        return null
+    if (expr is IrConst<*> &&  expr.kind == IrConstKind.String)
+        return StaticConst(expr)
+    return null
+}
+
 private fun tryCreateStaticSet(expr: IrCall): StaticSet? {
     assert(tryGetIntrinsicTypeByName(expr) == IntrinsicType.SET_OF)
 
@@ -87,17 +96,14 @@ private fun tryCreateStaticSet(expr: IrCall): StaticSet? {
     val elements = (expr.getValueArgument(0) as? IrVararg)?.elements ?:
         return null
 
-    if (!elements.all { it is IrConst<*> && it.type.isString() })
-        return null
-
     val setElements = elements.
-            map { StaticConst(it as IrConst<*>) }.
-            distinctBy { it.runtimeEqualityKey() }
+            map { tryCreateStaticConst(it) }.
+            distinctBy { it?.runtimeEqualityKey() }
 
-    if (setElements.size >= SMALL_SET_THRESHOLD)
+    if (setElements.any {it == null} || setElements.size >= SMALL_SET_THRESHOLD)
         return null
 
-    return StaticSet(setElements)
+    return StaticSet(setElements.filterNotNull())
 }
 
 private fun tryCreateStaticMap(expr: IrCall): StaticMap? {
@@ -118,21 +124,17 @@ private fun tryCreateStaticMap(expr: IrCall): StaticMap? {
             return null
         if (tryGetIntrinsicTypeByName(p) != IntrinsicType.KOTLIN_TO)
             return null
-        val key = (p.extensionReceiver as? IrConst<*>) ?:
+        val key = tryCreateStaticConst(p.extensionReceiver) ?:
             return null
-        val value = (p.getValueArgument(0) as? IrConst<*>) ?:
-            return null
-        if (key.kind != IrConstKind.String || value.kind != IrConstKind.String)
+        val value = tryCreateStaticConst(p.getValueArgument(0)) ?:
             return null
 
-        val keyConst = StaticConst(key)
-        val valConst = StaticConst(value)
         mapPairs.indexOfFirst {
-            it.first.runtimeEqualityKey() == keyConst.runtimeEqualityKey()
+            it.first.runtimeEqualityKey() == key.runtimeEqualityKey()
         }.let {
             if (it != -1) mapPairs.removeAt(it)
         }
-        mapPairs.add(keyConst to valConst)
+        mapPairs.add(key to value)
     }
 
     if (mapPairs.size >= SMALL_MAP_THRESHOLD)
