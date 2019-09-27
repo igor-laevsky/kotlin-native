@@ -51,12 +51,9 @@ internal object TopDownAnalyzerFacadeForKonan {
 
         val additionalPackages = mutableListOf<PackageFragmentProvider>()
         if (!module.isKonanStdlib()) {
-            println("!isKonanStdlib: $module")
             val dependencies = listOf(module) + resolvedDependencies.moduleDescriptors.resolvedDescriptors + resolvedDependencies.moduleDescriptors.forwardDeclarationsModule
             module.setDependencies(dependencies, resolvedDependencies.friends)
         } else {
-            println("isKonanStdlib: $module")
-
             assert (resolvedDependencies.moduleDescriptors.resolvedDescriptors.isEmpty())
             moduleContext.setDependencies(module)
             // [K][Suspend]FunctionN belong to stdlib.
@@ -89,16 +86,6 @@ internal object TopDownAnalyzerFacadeForKonan {
         }.apply {
             postprocessComponents(context, files)
         }.get<LazyTopDownAnalyzer>()
-
-
-        moduleContext.module.allDependencyModules.forEach {
-            println(it)
-            if (it is ModuleDescriptorImpl) {
-                it.packageFragmentProvider.getSubPackagesOf(FqName.ROOT, { true }).forEach {
-                    println(it)
-                }
-            }
-        }
 
         analyzerForKonan.analyzeDeclarations(TopDownAnalysisMode.TopLevelDeclarations, files)
         return AnalysisResult.success(trace.bindingContext, moduleContext.module)
