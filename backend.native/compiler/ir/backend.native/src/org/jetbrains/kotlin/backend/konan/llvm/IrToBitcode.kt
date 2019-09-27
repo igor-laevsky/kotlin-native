@@ -789,7 +789,7 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         tryCreateStaticExpr(value)?.let {
             context.log{"staticallyEvaluate(from)       : ${ir2string(value)}"}
             context.log{"staticallyEvaluate(to)         : $it"}
-            return codegen.staticData.emitStaticExpr(it)
+            return codegen.staticData.emitStaticExpr(it).llvm
         }
 
         when (value) {
