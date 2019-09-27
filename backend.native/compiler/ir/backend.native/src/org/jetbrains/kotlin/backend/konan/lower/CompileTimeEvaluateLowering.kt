@@ -66,6 +66,7 @@ internal fun tryCreateStaticExpr(expr: IrExpression): StaticExpr? {
 
     return when (tryGetIntrinsicTypeByName(expr)) {
         IntrinsicType.SET_OF -> tryCreateStaticSet(expr)
+        IntrinsicType.MAP_OF -> tryCreateStaticMap(expr)
         else -> null
     }
 }
@@ -97,6 +98,47 @@ private fun tryCreateStaticSet(expr: IrCall): StaticSet? {
         return null
 
     return StaticSet(setElements)
+}
+
+private fun tryCreateStaticMap(expr: IrCall): StaticMap? {
+    assert(tryGetIntrinsicTypeByName(expr) == IntrinsicType.MAP_OF)
+
+    val elements = (expr.getValueArgument(0) as? IrVararg)?.elements ?:
+        return null
+
+    // Need to preserve the following properties:
+    //   1. If two values are mapped to the equal keys, use the latest one.
+    //      Note that we need to use equality as it is defined in the native
+    //      runtime, i.e it's incorrect to directly use '.equals()' here.
+    //   2. Iteration order is the order in which elements were declared.
+
+    val mapPairs = mutableListOf<Pair<StaticConst, StaticConst>>()
+    elements.forEach { el ->
+        val p = (el as? IrCall) ?:
+            return null
+        if (tryGetIntrinsicTypeByName(p) != IntrinsicType.KOTLIN_TO)
+            return null
+        val key = (p.extensionReceiver as? IrConst<*>) ?:
+            return null
+        val value = (p.getValueArgument(0) as? IrConst<*>) ?:
+            return null
+        if (key.kind != IrConstKind.String || value.kind != IrConstKind.String)
+            return null
+
+        val keyConst = StaticConst(key)
+        val valConst = StaticConst(value)
+        mapPairs.indexOfFirst {
+            it.first.runtimeEqualityKey() == keyConst.runtimeEqualityKey()
+        }.let {
+            if (it != -1) mapPairs.removeAt(it)
+        }
+        mapPairs.add(keyConst to valConst)
+    }
+
+    if (mapPairs.size >= SMALL_MAP_THRESHOLD)
+        return null
+
+    return StaticMap(mapPairs.map { it.first }, mapPairs.map { it.second })
 }
 
 internal class CompileTimeEvaluateLowering(val context: Context): FileLoweringPass {

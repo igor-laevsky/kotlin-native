@@ -14,8 +14,10 @@ import org.jetbrains.kotlin.backend.konan.*
 import org.jetbrains.kotlin.backend.konan.descriptors.*
 import org.jetbrains.kotlin.backend.konan.ir.*
 import org.jetbrains.kotlin.backend.konan.llvm.coverage.LLVMCoverageInstrumentation
+import org.jetbrains.kotlin.backend.konan.lower.*
 import org.jetbrains.kotlin.backend.konan.lower.StaticConst
 import org.jetbrains.kotlin.backend.konan.lower.StaticExpr
+import org.jetbrains.kotlin.backend.konan.lower.StaticMap
 import org.jetbrains.kotlin.backend.konan.lower.StaticSet
 import org.jetbrains.kotlin.backend.konan.lower.tryCreateStaticExpr
 import org.jetbrains.kotlin.backend.konan.optimizations.DataFlowIR
@@ -850,9 +852,12 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
                         map { constValue(evaluateStaticExpr(it)) }
                 context.llvm.staticData.createConstSet(elements).llvm
             }
-            else -> {
-                assert(false) { "unimplemented" }
-                evaluateStaticExpr(expr)
+            is StaticMap -> {
+                val keys = expr.keys.
+                        map { constValue(evaluateStaticExpr(it)) }
+                val vals = expr.values.
+                        map { constValue(evaluateStaticExpr(it)) }
+                context.llvm.staticData.createConstMap(keys, vals).llvm
             }
         }
 

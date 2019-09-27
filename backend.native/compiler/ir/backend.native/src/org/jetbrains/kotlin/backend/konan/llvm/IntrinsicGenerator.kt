@@ -63,6 +63,7 @@ internal enum class IntrinsicType {
     LIST_OF_INTERNAL,
     SET_OF,
     MAP_OF,
+    KOTLIN_TO,
     IDENTITY,
     IMMUTABLE_BLOB,
     INIT_INSTANCE,
@@ -123,6 +124,7 @@ internal fun tryGetIntrinsicTypeByName(callSite: IrFunctionAccessExpression) =
     when (callSite.descriptor.original.fqNameSafe.asString()) {
         "kotlin.collections.setOf" -> IntrinsicType.SET_OF
         "kotlin.collections.mapOf" -> IntrinsicType.MAP_OF
+        "kotlin.to" -> IntrinsicType.KOTLIN_TO
         else -> null
     }
 

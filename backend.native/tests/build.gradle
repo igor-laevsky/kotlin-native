@@ -2154,6 +2154,11 @@ task setof(type: KonanLocalTest) {
     source = "datagen/literals/setof.kt"
 }
 
+task mapof(type: KonanLocalTest) {
+    goldValue = "OK\n"
+    source = "datagen/literals/mapof.kt"
+}
+
 task moderately_large_array(type: KonanLocalTest) {
     goldValue = "0\n"
     source = "runtime/collections/moderately_large_array.kt"

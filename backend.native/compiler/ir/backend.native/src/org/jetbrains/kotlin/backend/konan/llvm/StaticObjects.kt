@@ -138,14 +138,20 @@ internal fun StaticData.createConstMap(
     // into a linearly searched array.
     // TODO: Create separate Map implementation and use it here instead.
 
-    assert(vals == null) { "unimplemented" }
+    assert(vals == null || keys.size == vals.size)
 
     val mapSize = keys.size
     val hashSize = mapSize.takeHighestOneBit() shl 1
     val hashShift = hashSize.countLeadingZeroBits() + 1
 
     val keysArray = createConstKotlinArray(context.ir.symbols.array.owner, keys)
-    val valsArray = NullPointer(kObjHeader)
+    val valsArray =
+            if (vals == null) {
+                NullPointer(kObjHeader)
+            } else {
+                createConstKotlinArray(context.ir.symbols.array.owner, vals)
+            }
+
     // [1, 1, 1, ...] with mapSize elements
     val presenceArray = createConstKotlinArray(
             context.ir.symbols.intArray.owner,
