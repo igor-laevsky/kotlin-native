@@ -176,25 +176,25 @@ internal class StaticData(override val context: Context): ContextUtils {
         constInts.getOrPut(value) { createKotlinConstInt(value) }
 
     // Emits static expr as an llvm ir global constant.
-    fun evaluateStaticExpr(expr: StaticExpr): LLVMValueRef =
+    fun emitStaticExpr(expr: StaticExpr): LLVMValueRef =
         when (expr) {
             is StaticConst ->
-                evaluateStaticConst(expr)
+                emitStaticConst(expr)
             is StaticSet -> {
                 val elements = expr.keys.
-                        map { constValue(evaluateStaticExpr(it)) }
+                        map { constValue(emitStaticExpr(it)) }
                 context.llvm.staticData.createConstSet(elements).llvm
             }
             is StaticMap -> {
                 val keys = expr.keys.
-                        map { constValue(evaluateStaticExpr(it)) }
+                        map { constValue(emitStaticExpr(it)) }
                 val vals = expr.values.
-                        map { constValue(evaluateStaticExpr(it)) }
+                        map { constValue(emitStaticExpr(it)) }
                 context.llvm.staticData.createConstMap(keys, vals).llvm
             }
         }
 
-    private fun evaluateStaticConst(expr: StaticConst): LLVMValueRef =
+    private fun emitStaticConst(expr: StaticConst): LLVMValueRef =
         when (expr.backing.kind) {
             is IrConstKind.String ->
                 context.llvm.staticData.kotlinStringLiteral(expr.backing.value as String).llvm
