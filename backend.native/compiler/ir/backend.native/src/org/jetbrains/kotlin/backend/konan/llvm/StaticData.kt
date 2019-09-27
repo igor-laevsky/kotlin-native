@@ -175,9 +175,18 @@ internal class StaticData(override val context: Context): ContextUtils {
     fun kotlinConstInt(value: Int) =
         constInts.getOrPut(value) { createKotlinConstInt(value) }
 
-    // Emits static expr as an llvm ir global constant.
+    // TODO: Consider merging this with Int and String caches
+    private val staticExprCache = mutableMapOf<StaticExpr, ConstPointer>()
+
+    // Emits static expr as an llvm ir global constant. Exprs are cached so
+    // subsequent calls with the same value will not emit additional code.
     fun emitStaticExpr(expr: StaticExpr): ConstPointer =
-        when (expr) {
+        staticExprCache.getOrPut(expr) { emitStaticExprActual(expr) }
+
+    // Compared to the 'emitStaticExpr' this function guarantees that the new
+    // global will be emitted each time it's called.
+    private fun emitStaticExprActual(expr: StaticExpr): ConstPointer =
+         when (expr) {
             is StaticConst ->
                 emitStaticConst(expr)
             is StaticSet -> {

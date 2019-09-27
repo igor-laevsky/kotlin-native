@@ -68,6 +68,19 @@ fun runTest() {
     assertEquals(mapOf(2 to 3, 1 to 2).toString(), "{2=3, 1=2}")
     assertEquals(mapOf(2 to 3, 1 to 2, 2 to 1).toString(), "{1=2, 2=1}")
 
+    // check that deduplication works
+    val map1 = mapOf(1 to 2, 2 to 3)
+    val map2 = mapOf(1 to 2, 2 to 3)
+    val map3 = mapOf(1 to 2, 2 to 4)
+    assertTrue(map1 === map2)
+    assertTrue(map1 !== map3)
+
+    val smap1 = mapOf("a" to 2, "b" to 3)
+    val smap2 = mapOf("a" to 2, "b" to 3)
+    val smap3 = mapOf("wrong" to 2, "b" to 3)
+    assertTrue(smap1 === smap2)
+    assertTrue(smap1 !== smap3)
+
     println("OK")
 }
 

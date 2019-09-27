@@ -40,6 +40,20 @@ internal data class StaticConst(val backing: IrConst<*>): StaticExpr() {
     // This should return something which implements equals exactly the same as
     // the native runtime does.
     fun runtimeEqualityKey() = backing.kind to backing.value
+
+    // These overloads bypass by-reference comparison semantics of the IrConst.
+    // They are used by the internal compiler caches and we should never rely
+    // on them for the compile time evaluation.
+    override fun equals(other: Any?): Boolean {
+        if (other !is StaticConst)
+            return false
+        return backing.value == other.backing.value &&
+               backing.kind == other.backing.kind
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(backing.value, backing.kind)
+    }
 }
 
 internal data class StaticSet(val keys: List<StaticConst>): StaticExpr() {

@@ -46,6 +46,18 @@ fun runTest() {
     println(si != HashSet(listOf(1, 2, 3)))
     println(si == HashSet(listOf(1, 2, 3, 4)))
     println(setOf(1, 2, 3, 4, 3, 3, 2) == HashSet(listOf(1, 2, 3, 4)))
+
+    // check that deduplication works
+    val set1 = setOf(1, 2, 3)
+    val set2 = setOf(1, 2, 3)
+    val set3 = setOf(1, 2, 4)
+    println(set1 === set2)
+    println(set1 !== set3)
+    val sset1 = setOf("asd", "zxzc", "asdasd")
+    val sset2 = setOf("asd", "zxzc", "asdasd")
+    val sset3 = setOf("asd", "zxzc", "")
+    println(sset1 === sset2)
+    println(sset1 !== sset3)
 }
 
 fun get_static_set(): Set<String> {
