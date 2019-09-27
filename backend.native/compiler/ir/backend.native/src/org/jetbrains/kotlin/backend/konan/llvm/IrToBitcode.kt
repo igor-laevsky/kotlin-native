@@ -789,7 +789,7 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         tryCreateStaticExpr(value)?.let {
             context.log{"staticallyEvaluate(from)       : ${ir2string(value)}"}
             context.log{"staticallyEvaluate(to)         : $it"}
-            return evaluateStaticExpr(it)
+            return codegen.staticData.evaluateStaticExpr(it)
         }
 
         when (value) {
@@ -839,35 +839,6 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
     private fun IrStatement.generate() = generateStatement(this)
 
     //-------------------------------------------------------------------------//
-
-    private fun evaluateStaticConst(expr: StaticConst): LLVMValueRef =
-        when (expr.backing.kind) {
-            is IrConstKind.String ->
-                context.llvm.staticData.kotlinStringLiteral(expr.backing.value as String).llvm
-            is IrConstKind.Int ->
-                context.llvm.staticData.kotlinConstInt(expr.backing.value as Int).llvm
-            else ->
-                TODO("unimplemented")
-        }
-
-    // Emits static object as an llvm ir global constant.
-    private fun evaluateStaticExpr(expr: StaticExpr): LLVMValueRef =
-        when (expr) {
-            is StaticConst ->
-                evaluateStaticConst(expr)
-            is StaticSet -> {
-                val elements = expr.keys.
-                        map { constValue(evaluateStaticExpr(it)) }
-                context.llvm.staticData.createConstSet(elements).llvm
-            }
-            is StaticMap -> {
-                val keys = expr.keys.
-                        map { constValue(evaluateStaticExpr(it)) }
-                val vals = expr.values.
-                        map { constValue(evaluateStaticExpr(it)) }
-                context.llvm.staticData.createConstMap(keys, vals).llvm
-            }
-        }
 
     private fun evaluateGetObjectValue(value: IrGetObjectValue): LLVMValueRef =
             functionGenerationContext.getObjectValue(

@@ -7,7 +7,12 @@ package org.jetbrains.kotlin.backend.konan.llvm
 
 import llvm.*
 import org.jetbrains.kotlin.backend.konan.Context
+import org.jetbrains.kotlin.backend.konan.lower.StaticConst
+import org.jetbrains.kotlin.backend.konan.lower.StaticExpr
+import org.jetbrains.kotlin.backend.konan.lower.StaticMap
+import org.jetbrains.kotlin.backend.konan.lower.StaticSet
 import org.jetbrains.kotlin.ir.expressions.IrConst
+import org.jetbrains.kotlin.ir.expressions.IrConstKind
 
 /**
  * Provides utilities to create static data.
@@ -169,6 +174,35 @@ internal class StaticData(override val context: Context): ContextUtils {
     private val constInts = mutableMapOf<Int, ConstPointer>()
     fun kotlinConstInt(value: Int) =
         constInts.getOrPut(value) { createKotlinConstInt(value) }
+
+    // Emits static expr as an llvm ir global constant.
+    fun evaluateStaticExpr(expr: StaticExpr): LLVMValueRef =
+        when (expr) {
+            is StaticConst ->
+                evaluateStaticConst(expr)
+            is StaticSet -> {
+                val elements = expr.keys.
+                        map { constValue(evaluateStaticExpr(it)) }
+                context.llvm.staticData.createConstSet(elements).llvm
+            }
+            is StaticMap -> {
+                val keys = expr.keys.
+                        map { constValue(evaluateStaticExpr(it)) }
+                val vals = expr.values.
+                        map { constValue(evaluateStaticExpr(it)) }
+                context.llvm.staticData.createConstMap(keys, vals).llvm
+            }
+        }
+
+    private fun evaluateStaticConst(expr: StaticConst): LLVMValueRef =
+        when (expr.backing.kind) {
+            is IrConstKind.String ->
+                context.llvm.staticData.kotlinStringLiteral(expr.backing.value as String).llvm
+            is IrConstKind.Int ->
+                context.llvm.staticData.kotlinConstInt(expr.backing.value as Int).llvm
+            else ->
+                TODO("unimplemented")
+        }
 }
 
 /**
