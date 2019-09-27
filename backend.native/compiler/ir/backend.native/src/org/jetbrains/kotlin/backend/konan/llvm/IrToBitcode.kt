@@ -14,6 +14,9 @@ import org.jetbrains.kotlin.backend.konan.*
 import org.jetbrains.kotlin.backend.konan.descriptors.*
 import org.jetbrains.kotlin.backend.konan.ir.*
 import org.jetbrains.kotlin.backend.konan.llvm.coverage.LLVMCoverageInstrumentation
+import org.jetbrains.kotlin.backend.konan.lower.StaticConst
+import org.jetbrains.kotlin.backend.konan.lower.StaticExpr
+import org.jetbrains.kotlin.backend.konan.lower.StaticSet
 import org.jetbrains.kotlin.backend.konan.lower.tryCreateStaticExpr
 import org.jetbrains.kotlin.backend.konan.optimizations.DataFlowIR
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
@@ -784,7 +787,7 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         tryCreateStaticExpr(value)?.let {
             context.log{"staticallyEvaluate(from)       : ${ir2string(value)}"}
             context.log{"staticallyEvaluate(to)         : $it"}
-            // do nothing for now
+            return evaluateStaticExpr(it)
         }
 
         when (value) {
@@ -834,6 +837,24 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
     private fun IrStatement.generate() = generateStatement(this)
 
     //-------------------------------------------------------------------------//
+
+    // Emits static object as an llvm ir global constant.
+    private fun evaluateStaticExpr(expr: StaticExpr): LLVMValueRef =
+        when (expr) {
+            is StaticConst -> {
+                assert(expr.backing.kind == IrConstKind.String) { "unimplemented" }
+                context.llvm.staticData.kotlinStringLiteral(expr.backing.value as String).llvm
+            }
+            is StaticSet -> {
+                val elements = expr.keys.
+                        map { constValue(evaluateStaticExpr(it)) }
+                context.llvm.staticData.createConstSet(elements).llvm
+            }
+            else -> {
+                assert(false) { "unimplemented" }
+                evaluateStaticExpr(expr)
+            }
+        }
 
     private fun evaluateGetObjectValue(value: IrGetObjectValue): LLVMValueRef =
             functionGenerationContext.getObjectValue(

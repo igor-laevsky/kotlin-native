@@ -107,6 +107,8 @@ internal class KonanSymbols(
     }.toMap()
 
     val arrayList = symbolTable.referenceClass(getClassDescriptor("kotlin", "collections", "ArrayList"))
+    val hashMap = symbolTable.referenceClass(getClassDescriptor("kotlin", "collections", "HashMap"))
+    val hashSet = symbolTable.referenceClass(getClassDescriptor("kotlin", "collections", "HashSet"))
 
     val symbolName = topLevelClass(RuntimeNames.symbolNameAnnotation)
     val filterExceptions = topLevelClass(RuntimeNames.filterExceptions)

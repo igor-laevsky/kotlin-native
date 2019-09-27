@@ -2148,6 +2148,11 @@ task listof1(type: KonanLocalTest) {
     source = "datagen/literals/listof1.kt"
 }
 
+task setof(type: KonanLocalTest) {
+    goldValue = "true\ntrue\n[a, b, c]\ntrue\nfalse\n3\ntrue\nfalse\n" +
+                "false\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n"
+    source = "datagen/literals/setof.kt"
+}
 
 task moderately_large_array(type: KonanLocalTest) {
     goldValue = "0\n"

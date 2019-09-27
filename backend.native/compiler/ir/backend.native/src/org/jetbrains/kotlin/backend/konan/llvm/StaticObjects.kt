@@ -120,6 +120,79 @@ internal fun StaticData.createConstArrayList(array: ConstPointer, length: Int): 
     return createConstKotlinClass(arrayListClass, arrayListFields)
 }
 
+/**
+ * Creates static object adhering to the `kotlin.collections.Map<elementType>`.
+ * Iteration order of the resulting map is the same as in the input lists.
+ *
+ * @param keys to populate the map with.
+ * @param vals values corresponding to the given keys. Can be null in case if
+ *             this map implements a set.
+ */
+@UseExperimental(ExperimentalStdlibApi::class)
+internal fun StaticData.createConstMap(
+        keys: List<ConstValue>, vals: List<ConstValue>?): ConstPointer {
+
+    // This abuses HashMap implementation. We fill hashArray with the
+    // pow(2, ceil(log(mapSize))) number of integers circulating from 1 to mapSize.
+    // This allows us to not depend on the object hash but degrades the hash map
+    // into a linearly searched array.
+    // TODO: Create separate Map implementation and use it here instead.
+
+    assert(vals == null) { "unimplemented" }
+
+    val mapSize = keys.size
+    val hashSize = mapSize.takeHighestOneBit() shl 1
+    val hashShift = hashSize.countLeadingZeroBits() + 1
+
+    val keysArray = createConstKotlinArray(context.ir.symbols.array.owner, keys)
+    val valsArray = NullPointer(kObjHeader)
+    // [1, 1, 1, ...] with mapSize elements
+    val presenceArray = createConstKotlinArray(
+            context.ir.symbols.intArray.owner,
+            IntArray(mapSize){1}.map { Int32(it) })
+    // [1, 2, ... mapSize, 1, 2, ...] with hashSize elements
+    val hashArray = createConstKotlinArray(
+            context.ir.symbols.intArray.owner,
+            (0 until hashSize).map { Int32((it % mapSize) + 1) })
+    val maxProbeDistance = Int32(mapSize * 2)
+    val length = Int32(mapSize)
+
+    val mapClass = context.ir.symbols.hashMap.owner
+    val className = mapClass.fqNameForIrSerialization
+    val fields = mapOf(
+            "$className.keysArray" to keysArray,
+            "$className.valuesArray" to valsArray,
+            "$className.presenceArray" to presenceArray,
+            "$className.hashArray" to hashArray,
+            "$className.maxProbeDistance" to maxProbeDistance,
+            "$className.length" to length,
+            "$className._size" to length,
+            "$className.keysView" to NullPointer(kObjHeader),
+            "$className.valuesView" to NullPointer(kObjHeader),
+            "$className.entriesView" to NullPointer(kObjHeader),
+            "$className.hashShift" to Int32(hashShift))
+
+    return createConstKotlinClass(mapClass, fields)
+}
+
+/**
+ * Creates static object adhering to the `kotlin.collections.Set<elementType>`.
+ * Iteration order of the resulting set is the same as in the input list.
+ *
+ * @param elements to populate the set with.
+ */
+internal fun StaticData.createConstSet(
+        elements: List<ConstValue>): ConstPointer {
+
+    val setClass = context.ir.symbols.hashSet.owner
+
+    val constMap = createConstMap(elements, null)
+    val className = setClass.fqNameForIrSerialization
+    val fields = mapOf("$className.backing" to constMap)
+
+    return createConstKotlinClass(setClass, fields)
+}
+
 internal fun StaticData.createUniqueInstance(
         kind: UniqueKind, bodyType: LLVMTypeRef, typeInfo: ConstPointer): ConstPointer {
     assert (getStructElements(bodyType).size == 1) // ObjHeader only.
